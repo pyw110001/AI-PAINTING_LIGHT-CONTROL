@@ -1,0 +1,5 @@
+{
+  "name": "AI Virtual Studio_LIGHT CONTROL",
+  "description": "Interactive 3D lighting control studio powered by Gemini AI. Upload an image, drag the lights in 3D space, and reimagine the scene.",
+  "requestFramePermissions": []
+}
