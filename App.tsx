@@ -101,7 +101,7 @@ function App() {
           </div>
           <div>
             <h1 className="text-xl font-bold tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-cyber-primary to-cyber-secondary">
-              AI VIRTUAL STUDIO
+              AI VIRTUAL STUDIO LIGHT CONTROL
             </h1>
           </div>
         </div>
