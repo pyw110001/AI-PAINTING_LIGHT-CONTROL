@@ -1,6 +1,17 @@
 import { GoogleGenAI } from "@google/genai";
 import { LightParams } from "../types";
 
+// Type definition for the AI Studio environment global
+declare global {
+  interface AIStudio {
+    hasSelectedApiKey: () => Promise<boolean>;
+    openSelectKey: () => Promise<void>;
+  }
+  interface Window {
+    aistudio?: AIStudio;
+  }
+}
+
 /**
  * Converts technical lighting parameters into a descriptive photography prompt.
  */
@@ -43,13 +54,19 @@ export const generateLitImage = async (
 ): Promise<string> => {
   // 1. Check/Get API Key using the specialized window.aistudio flow for paid models
   if (!window.aistudio) {
-      throw new Error("AI Studio environment not detected.");
-  }
-
-  const hasKey = await window.aistudio.hasSelectedApiKey();
-  if (!hasKey) {
-      await window.aistudio.openSelectKey();
-      // As per guidelines, assume success after triggering openSelectKey.
+      // If we are not in AI Studio, we might be local. 
+      // We check process.env.API_KEY. If missing, we throw, but for this specific environment 
+      // we assume window.aistudio availability as per instructions.
+      // If running locally without the shim, ensure process.env.API_KEY is set manually.
+      if (!process.env.API_KEY) {
+         throw new Error("AI Studio environment not detected and no API_KEY found.");
+      }
+  } else {
+      const hasKey = await window.aistudio.hasSelectedApiKey();
+      if (!hasKey) {
+          await window.aistudio.openSelectKey();
+          // As per guidelines, assume success after triggering openSelectKey.
+      }
   }
 
   // 2. Initialize Client (Key is injected via process.env.API_KEY after selection)
@@ -98,19 +115,28 @@ export const generateLitImage = async (
   } catch (error: any) {
     console.error("Gemini Generation Error:", error);
     
-    // Check for Permission Denied (403) or Entity Not Found (often 404 or 400 related to key scope)
-    const errorString = error.toString() + JSON.stringify(error);
+    // Robust Error Checking
+    // Capture both the message property and the raw JSON structure if it's an API error object
+    const errorString = JSON.stringify(error, Object.getOwnPropertyNames(error));
+    const errorMessage = error.message || "";
+    
+    // Check for Permission Denied (403) or Entity Not Found
+    // This often happens if the API key is not from a paid project or doesn't have access to the model.
     if (
-        errorString.includes("403") || 
-        errorString.includes("PERMISSION_DENIED") || 
-        errorString.includes("Requested entity was not found")
+        errorMessage.includes("403") || 
+        errorMessage.includes("PERMISSION_DENIED") || 
+        errorString.includes("403") ||
+        errorString.includes("PERMISSION_DENIED") ||
+        errorMessage.includes("Requested entity was not found")
     ) {
-         try {
-            await window.aistudio.openSelectKey();
-         } catch (e) {
-             console.error("Error reopening key selector:", e);
+         if (window.aistudio) {
+             try {
+                await window.aistudio.openSelectKey();
+             } catch (e) {
+                 console.error("Error reopening key selector:", e);
+             }
          }
-         throw new Error("Permission denied. Please select a paid API key valid for Gemini 3 Pro.");
+         throw new Error("Permission denied. Please select a paid API key valid for Gemini 3 Pro and try again.");
     }
     throw error;
   }

@@ -90,6 +90,16 @@ function App() {
     }
   };
 
+  const handleChangeKey = async () => {
+      if (window.aistudio) {
+          try {
+              await window.aistudio.openSelectKey();
+          } catch (e) {
+              console.error(e);
+          }
+      }
+  };
+
   return (
     <div className="h-screen w-screen bg-[#0f172a] text-white flex flex-col overflow-hidden">
       
@@ -106,6 +116,15 @@ function App() {
           </div>
         </div>
         <div className="flex items-center gap-4">
+           {window.aistudio && (
+             <button 
+               onClick={handleChangeKey}
+               className="p-2 hover:bg-white/10 rounded-full transition-colors text-gray-400 hover:text-white"
+               title="Change API Key"
+             >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
+             </button>
+           )}
            <span className="text-xs font-mono text-gray-500">Gemini 3 Pro</span>
            <span className="px-2 py-0.5 bg-cyber-primary/10 text-cyber-primary text-[10px] font-mono rounded border border-cyber-primary/30">
              v1.0 BETA
